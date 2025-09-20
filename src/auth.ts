@@ -1,11 +1,12 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI } from "better-auth/plugins";
+import { admin, openAPI } from "better-auth/plugins";
+import { ac, roles } from "./core/auth/permissions";
 import { db } from "./database/client";
 
 export const auth = betterAuth({
   basePath: "/auth",
-  plugins: [openAPI()],
+  plugins: [openAPI(), admin({ ac, roles })],
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,

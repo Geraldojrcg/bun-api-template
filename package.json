@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "auth:generate": "bun x --bun @better-auth/cli generate --config ./src/auth.ts --output src/database/schema/_generated.ts",
     "db:generate": "bun --env-file .env --bun drizzle-kit generate",
     "db:migrate": "bun --env-file .env --bun drizzle-kit migrate",
     "dev": "bun run --watch src/index.ts"

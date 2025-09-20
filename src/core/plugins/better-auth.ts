@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
-import httpStatus from "http-status";
 import { auth } from "@/auth";
+import { StatusCode } from "../http/status-code";
 
-export const betterAuth = new Elysia({ name: "better-auth" })
+export const betterAuthPlugin = new Elysia({ name: "better-auth" })
   .mount(auth.handler)
   .macro({
     auth: {
@@ -12,7 +12,7 @@ export const betterAuth = new Elysia({ name: "better-auth" })
         });
 
         if (!session) {
-          return status(httpStatus.UNAUTHORIZED, { error: "Unauthorized" });
+          return status(StatusCode.UNAUTHORIZED, { error: "Unauthorized" });
         }
 
         return session;
@@ -20,11 +20,9 @@ export const betterAuth = new Elysia({ name: "better-auth" })
     },
   });
 
-let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>;
+let _schema: ReturnType<typeof auth.api.generateOpenAPISchema> | null;
 const getSchema = () => {
-  if (!_schema) {
-    _schema = auth.api.generateOpenAPISchema();
-  }
+  _schema ??= auth.api.generateOpenAPISchema();
   return _schema;
 };
 
