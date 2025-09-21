@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-const taskStatusEnum = pgEnum("task_status", [
+export const taskStatusEnum = pgEnum("task_status", [
   "pending",
   "in_progress",
   "completed",

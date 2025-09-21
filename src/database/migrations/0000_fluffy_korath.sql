@@ -46,6 +46,8 @@ CREATE TABLE "sessions" (
 	CONSTRAINT "sessions_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
+CREATE TYPE "public"."task_status" AS ENUM('pending', 'in_progress', 'completed');
+--> statement-breakpoint
 CREATE TABLE "tasks" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,

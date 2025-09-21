@@ -25,10 +25,12 @@ export const tasks = new Elysia({
   })
   .get(
     "/",
-    async ({ db }) => {
+    async ({ db, user }) => {
       const service = new TasksService(db);
 
-      const response = await service.findAll();
+      const response = await service.findAll(
+        user.role === "admin" ? undefined : user.id
+      );
 
       return response;
     },
@@ -40,10 +42,13 @@ export const tasks = new Elysia({
   )
   .get(
     "/:id",
-    async ({ status, db, params: { id } }) => {
+    async ({ status, db, user, params: { id } }) => {
       const service = new TasksService(db);
 
-      const response = await service.findById(id);
+      const response = await service.findById(
+        id,
+        user.role === "admin" ? undefined : user.id
+      );
 
       if (!response) {
         return status(StatusCode.NOT_FOUND, { error: "Task not found" });
@@ -59,14 +64,17 @@ export const tasks = new Elysia({
         200: taskSchema,
         404: errorSchema,
       },
+      permissions: {
+        task: ["view"],
+      },
     }
   )
   .post(
     "/",
-    async ({ db, body }) => {
+    async ({ db, user, body }) => {
       const service = new TasksService(db);
 
-      const response = await service.create(body);
+      const response = await service.create(body, user.id);
 
       return response;
     },
@@ -76,14 +84,21 @@ export const tasks = new Elysia({
         201: taskSchema,
         404: errorSchema,
       },
+      permissions: {
+        task: ["create"],
+      },
     }
   )
   .put(
     "/:id",
-    async ({ status, db, params: { id }, body }) => {
+    async ({ status, db, user, params: { id }, body }) => {
       const service = new TasksService(db);
 
-      const response = await service.update(id, body);
+      const response = await service.update(
+        id,
+        body,
+        user.role === "admin" ? undefined : user.id
+      );
 
       if (!response) {
         return status(StatusCode.NOT_FOUND, { error: "Task not found" });
@@ -100,6 +115,9 @@ export const tasks = new Elysia({
         200: taskSchema,
         404: errorSchema,
       },
+      permissions: {
+        task: ["update"],
+      },
     }
   )
   .delete(
@@ -110,18 +128,21 @@ export const tasks = new Elysia({
       const response = await service.delete(id);
 
       if (!response) {
-        return status(StatusCode.NOT_FOUND, { error: "Error deleting task" });
+        return status(StatusCode.NOT_FOUND, { error: "Task not found" });
       }
 
-      return status(StatusCode.NO_CONTENT, {});
+      return status(StatusCode.NO_CONTENT, null);
     },
     {
       params: z.object({
         id: z.uuid("v7"),
       }),
       response: {
-        204: z.object({}),
+        204: z.null(),
         404: errorSchema,
+      },
+      permissions: {
+        task: ["delete"],
       },
     }
   );

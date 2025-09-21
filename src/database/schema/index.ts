@@ -1,6 +1,6 @@
 import { accounts } from "./accounts";
 import { sessions } from "./sessions";
-import { tasks } from "./task";
+import { taskStatusEnum, tasks } from "./task";
 import { users } from "./users";
 import { verifications } from "./verifications";
 
@@ -10,4 +10,5 @@ export const schema = {
   accounts,
   verifications,
   tasks,
+  taskStatusEnum,
 };

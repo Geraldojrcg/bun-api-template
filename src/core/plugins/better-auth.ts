@@ -1,15 +1,26 @@
 import { Elysia } from "elysia";
-import { auth } from "@/auth";
+import { auth as authClient } from "@/auth";
 import { StatusCode } from "../http/status-code";
 
+type AuthUserHasPermissionRequestParams = Parameters<
+  typeof authClient.api.userHasPermission
+>[0]["body"];
+
 export const betterAuthPlugin = new Elysia({ name: "better-auth" })
-  .mount(auth.handler)
+  .mount(authClient.handler)
+  .decorate("auth", authClient)
+  .state(
+    "session",
+    null as null | Awaited<ReturnType<typeof authClient.api.getSession>>
+  )
   .macro({
     auth: {
-      async resolve({ status, request: { headers } }) {
+      async resolve({ status, auth, request: { headers }, store }) {
         const session = await auth.api.getSession({
           headers,
         });
+
+        store.session = session;
 
         if (!session) {
           return status(StatusCode.UNAUTHORIZED, { error: "Unauthorized" });
@@ -18,11 +29,49 @@ export const betterAuthPlugin = new Elysia({ name: "better-auth" })
         return session;
       },
     },
+    permissions: (
+      permission: AuthUserHasPermissionRequestParams["permission"]
+    ) => {
+      return {
+        async resolve({ status, auth, store }) {
+          if (!permission) {
+            return;
+          }
+
+          const { session } = store;
+
+          if (!session) {
+            return status(StatusCode.UNAUTHORIZED, { error: "Unauthorized" });
+          }
+
+          const { error, success } = await auth.api.userHasPermission({
+            body: {
+              userId: session.user.id,
+              role: session.user
+                .role as AuthUserHasPermissionRequestParams["role"],
+              permission,
+            },
+          });
+
+          if (error) {
+            return status(StatusCode.INTERNAL_SERVER_ERROR, { error });
+          }
+
+          if (success) {
+            return;
+          }
+
+          return status(StatusCode.FORBIDDEN, {
+            error: "You do not have permission to perform this action.",
+          });
+        },
+      };
+    },
   });
 
-let _schema: ReturnType<typeof auth.api.generateOpenAPISchema> | null;
+let _schema: ReturnType<typeof authClient.api.generateOpenAPISchema> | null;
 const getSchema = () => {
-  _schema ??= auth.api.generateOpenAPISchema();
+  _schema ??= authClient.api.generateOpenAPISchema();
   return _schema;
 };
 

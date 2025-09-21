@@ -1,4 +1,5 @@
 import z from "zod";
+import { dateToString } from "@/core/lib/zod";
 
 export const taskSchema = z.object({
   id: z.uuid("v7"),
@@ -6,21 +7,20 @@ export const taskSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(1000),
   status: z.enum(["pending", "in_progress", "completed"]).optional(),
-  createdAt: z.iso.date().optional(),
-  updatedAt: z.iso.date().optional(),
+  createdAt: dateToString.optional(),
+  updatedAt: dateToString.optional(),
 });
 
 export const listTasksSchema = taskSchema.array();
 
 export const createTaskSchema = taskSchema.omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export const updateTaskSchema = createTaskSchema
-  .partial()
-  .omit({ userId: true });
+export const updateTaskSchema = createTaskSchema.partial();
 
 export type CreateTaskSchema = z.infer<typeof createTaskSchema>;
 export type UpdateTaskSchema = z.infer<typeof updateTaskSchema>;
